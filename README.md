@@ -5,13 +5,17 @@ An Haskell library for writing Turing Machines
 
 ## Introduction
 If you have never heard of Turing Machines good: it probably means you went out often enough during your life.
-However, if you have ever happened to have to write Turing Machines for a whatever reason
-and felt like going out the same night, you probably learnt what "impossibility" is about (if you do not have a clear idea yet, look for a semantic path 
+
+However, if you have ever happened to have to describe a program by means of a Turing Machines for whatever reason
+and felt like going out the same night, you probably learnt first-hand what the notion of "impossibility" is about and
+you may be ready for a course in computational complexity (if you do not have a clear idea yet, look for a semantic path 
 between the words "agreement" and "condominium meeting" or keep hanging out Turing Machines and ask them if
 they ever halt). 
-Turing Machines (TMs) are a formalism for computation. Given their complexity, even easy tasks and algorithms can be daunting.
+
+Turing Machines (TMs) are an important formalism for computation. Given their low-level-ness,
+even defining easy tasks and algorithms can be daunting.
 At least two problems emerge:
-* TMs are not easily testable
+* TMs are not simply testable
 * TMs are described by long-winded definitions of transition functions
 
 This library provides an Haskell DSL for defining Turing Machines. Some aspects of the Haskell programming language
@@ -45,5 +49,6 @@ Then fire up `ghci`:
     Changing state to q_halt
     Final output is '#START# 1 1 1 1'
     Result is: 15
+
 
 
