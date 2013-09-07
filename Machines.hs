@@ -1,9 +1,5 @@
 module Machines where
 
-import Data.Char
-import Numeric
-
-
 import TM
 
 
@@ -49,19 +45,6 @@ additionTM = mkTM
             ('1', '1') -> ("q_summing_with_carry", [NoChange, Sym '1'], [R, R, R]) -- write 1 and go further with carry
         
         
-encodeNum :: Int -> [Symbol]
-encodeNum n = let binaryRep = showIntAtBase 2 intToDigit n ""
-                  revBinaryRep = reverse binaryRep
-              in map Sym revBinaryRep
-                 
-encodePairOfNum :: Int -> Int -> [Symbol]
-encodePairOfNum x y = let xEnc = encodeNum x
-                          yEnc = encodeNum y
-                          maxDigits = max (length xEnc) (length yEnc)
-                          fillWithZeros enc = enc ++ (replicate (maxDigits - (length enc)) (Sym '0'))
-                          xEncFilled = fillWithZeros xEnc
-                          yEncFilled = fillWithZeros yEnc
-                      in xEncFilled ++ [StartSym] ++ yEncFilled
 
 maxSteps = 100
 
