@@ -31,7 +31,7 @@ Then fire up `ghci`:
 
     $ ghci
     Prelude> :l AdditionTM.hs
-    *Machines> runAdditionTM 11 4
+    *AdditionTM> runAdditionTM 11 4
     Got TM in state "q_start" with tapes [Tape [#START# 1 1 0 1 #START# 0 0 1 0] @ 0,Tape [#START#] @ 0,Tape [#START#] @ 0]
     I have read symbols [StartSym,StartSym,StartSym]
     Writing symbols [NoChange,NoChange]
