@@ -16,7 +16,6 @@ instance State AdditionState where
 -- and the two numbers are separated by a start symbol
 additionTM = mkTM
         1 -- # of Working tapes (just one: for copying the first number)
-        [QReadCopyX, QRewindX, QSummingNoCarry, QSummingWithCarry] -- additional states
         tf -- transition function
   where tf QStart _ = (QReadCopyX, [NoChange, NoChange], [R, R, R])
         tf QReadCopyX (StartSym:_) = (QRewindX, [NoChange, NoChange], [R, L, S]) -- finished to copy x

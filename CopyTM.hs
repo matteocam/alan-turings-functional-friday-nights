@@ -15,8 +15,6 @@ instance State CopyTMState where
 copyTM :: [Symbol] -> TM CopyTMState
 copyTM = mkTM 
          0  -- # of working tapes
-         --["q_copy"]  -- additional states
-         undefined -- additional states
          tf -- transition function 
   where tf QStart _ = (QCopy, [NoChange], [R, R]) -- start copying
         tf QHalt [BlankSym, _]  = (QHalt, [NoChange], [S, S]) -- finished copying

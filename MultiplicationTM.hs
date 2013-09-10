@@ -24,7 +24,6 @@ instance State MultiplicationState where
 -- and the two numbers are separated by a start symbol
 multiplicationTM = mkTM
         1 -- # of Working tapes (just Sym '1': for copying the first number)
-        [] -- additional states
         tf -- transition function
   where tf QStart _  = 
           (QReadCopyX, [NoChange, NoChange], [R, R, R])
