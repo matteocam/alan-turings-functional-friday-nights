@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts, RankNTypes #-}
 module TM where
 
 import Control.Monad.Writer
@@ -9,8 +10,13 @@ import Numeric
 data HeaderOp = L | R | S deriving (Eq, Show)
 data Symbol = BlankSym | StartSym | NoChange | Sym Char deriving (Eq, Show)
 type Alphabet = [Symbol]
-type State = String
-type States = [State]
+--type State = String
+
+class (Eq s, Show s) => State s  where 
+  qstart :: s
+  qhalt :: s
+
+--type States = [State]
 data Tape = Tape { tape :: [Symbol], header :: Int} deriving (Eq)
 type Tapes = [Tape]
 
@@ -50,30 +56,31 @@ moveHeaderTape t op = case op
     oldHeader = header t
                  
 
-type TransFunction = State -> [Symbol] -> (State, [Symbol], [HeaderOp])
-data TM = TM { tmalphabet :: Alphabet, tmstates :: States, tmtapes :: Tapes, tmtransfunction :: TransFunction, tmcurstate :: State }
+type TransFunction s = s -> [Symbol] -> (s, [Symbol], [HeaderOp])
+data TM s = TM { tmalphabet :: Alphabet,  tmtapes :: Tapes, tmtransfunction :: TransFunction s, tmcurstate :: s }
 
 -- TODO: Check that states and symbols are in the set of the TM 
 
 alphaNumericalAlphabet = map Sym (['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9'])
 
-mkTM :: Int -> States -> TransFunction -> [Symbol] -> TM
-mkTM numWorkTapes states tf input = TM alphaNumericalAlphabet states tapes tf "q_start"
+
+mkTM :: (State s) => Int -> TransFunction s -> [Symbol] -> TM s
+mkTM numWorkTapes tf input = TM alphaNumericalAlphabet  tapes tf qstart
   where tapes = [inputTape] ++ workTapes ++ [outputTape]
         workTapes = replicate numWorkTapes mkBlankTape
         outputTape = mkBlankTape
         inputTape = mkInputTape input
 
-readFromTMTape :: TM -> Int -> Symbol
+readFromTMTape :: TM s -> Int -> Symbol
 readFromTMTape tm i = readFromTape (tmtapes tm !! i)
 
-writeOnTapes :: TM -> [Symbol] -> TM
+writeOnTapes :: TM s -> [Symbol] -> TM s
 writeOnTapes tm symbols = let tapes = tail $ tmtapes tm
                               inputTape = head $ tmtapes tm
                               tapes' = zipWith  writeOnTape tapes symbols
                           in tm {tmtapes = inputTape : tapes'}
 
-moveTapes :: TM -> [HeaderOp] -> TM
+moveTapes :: TM s -> [HeaderOp] -> TM s
 moveTapes tm ops = let tapes =  tmtapes tm
                        --inputTape = head $ tmtapes tm
                        tapes' = zipWith moveHeaderTape tapes ops
@@ -81,7 +88,7 @@ moveTapes tm ops = let tapes =  tmtapes tm
                                           
 
 -- executes one step of the TM
-step :: TM -> Writer [String] TM
+step :: (State s) => TM s -> Writer [String] (TM s)
 step tm = let readSymbols = map (readFromTMTape tm) [0..(length $ tmtapes tm)-1] 
               (nextState, symbolsToWrite, ops) = (tmtransfunction tm) (tmcurstate tm) readSymbols
               tm' = writeOnTapes tm symbolsToWrite
@@ -91,7 +98,7 @@ step tm = let readSymbols = map (readFromTMTape tm) [0..(length $ tmtapes tm)-1]
                  tell ["I have read symbols " ++ show readSymbols]
                  tell ["Writing symbols " ++ (show symbolsToWrite)]
                  tell ["Doing operations " ++ (show ops)]
-                 tell ["Changing state to " ++ nextState]
+                 tell ["Changing state to " ++ show nextState]
                  if halted ret_tm then
                    tell ["Final output is '" ++ showOutputTape ret_tm ++ "'"]
                  else 
@@ -101,17 +108,17 @@ step tm = let readSymbols = map (readFromTMTape tm) [0..(length $ tmtapes tm)-1]
 
 
               
-outputTape :: TM -> Tape
+outputTape :: TM s -> Tape
 outputTape tm = last $ tmtapes tm
 
-inputTape :: TM -> Tape
+inputTape :: TM s -> Tape
 inputTape tm = head $ tmtapes tm
 
 
-showOutputTape :: TM -> String
+showOutputTape :: TM s -> String
 showOutputTape  = showPartialTape . outputTape 
 
-showInputTape :: TM -> String
+showInputTape :: TM s -> String
 showInputTape  = showPartialTape . inputTape 
 
 takeNonBlankTape :: Tape -> [Symbol]
@@ -124,12 +131,12 @@ showPartialTape tp  = let output = takeNonBlankTape tp
                           symToString (Sym c) = [c]
                       in unwords $ map symToString output
                          
-halted :: TM -> Bool
-halted tm = (tmcurstate tm) == "q_halt"
+halted :: (Eq s, State s) => TM s -> Bool
+halted tm = (tmcurstate tm) == qhalt
                          
-steps :: TM -> Int -> Writer [String] TM
+steps :: (State s) => TM s -> Int -> Writer [String] (TM s)
 steps tm n = steps' tm n 0
-  where steps' ::  TM -> Int -> Int -> Writer [String] TM
+  where steps' ::  (State s) => TM s -> Int -> Int -> Writer [String] (TM s)
         steps' tm n acc 
           | n == acc = return tm
           | otherwise = do tm' <- step tm
@@ -142,7 +149,7 @@ steps tm n = steps' tm n 0
 
 
 -- run a Turing Machine for a maximum number of steps printing logging information on screen  
-runStepsTM :: TM -> Int -> IO ()
+runStepsTM :: (State s) => TM s -> Int -> IO ()
 runStepsTM tm numSteps = let (tm', log) = runWriter $ steps tm numSteps
                              in do putStr $ unlines log
                                    putStrLn ("Result is: " ++ (decodeNum  $ tail $ takeNonBlankTape $ outputTape tm'))
@@ -176,3 +183,7 @@ encodePairOfNum x y = let xEnc = encodeNum x
                           xEncFilled = fillWithZeros xEnc
                           yEncFilled = fillWithZeros yEnc
                       in xEncFilled ++ [StartSym] ++ yEncFilled
+
+-- useful shortenings
+--one = Sym '1'
+--zero = Sym '0'
